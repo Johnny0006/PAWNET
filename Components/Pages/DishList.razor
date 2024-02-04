@@ -1,0 +1,135 @@
+﻿@page "/"
+@using PAWNET.Service
+@using PAWNET.Model
+@inject DishService DishService
+@inject NavigationManager NavigationManager
+
+<h3>Dish List</h3>
+<input type="text" class="form-control" @bind="filterByName" placeholder="Filter by Name" />
+<button class="btn btn-info" @onclick="()=>refreshData()">Filter</button>
+<button class="btn btn-secondary" @onclick="ClearFilters">Clear Filters</button>
+<table class="table table-striped table-bordered table-sm">
+    <thead>
+        <tr>
+            <th class="th-sm" @onclick="()=>refreshData(nameof(Dish.Id))">ID</th>
+            <th class="th-sm" @onclick="()=>refreshData(nameof(Dish.Name))">Name</th>
+            <th class="th-sm" @onclick="()=>refreshData(nameof(Dish.Description))">Description</th>
+            <th class="th-sm" @onclick="()=>refreshData(nameof(Dish.Price))">Price</th>
+            <th class="th-sm" @onclick="()=>refreshData(nameof(Dish.Category))">Category</th>
+            <th class="th-sm" @onclick="()=>refreshData(nameof(Dish.IsVegetarian))">Vegetarian</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var dish in dishes)
+        {
+            <tr>
+                <td>@dish.Id</td>
+                <td>@dish.Name</td>
+                <td>@dish.Description</td>
+                <td>@dish.Price</td>
+                <td>@dish.Category</td>
+                <td>@(dish.IsVegetarian ? "Yes" : "No")</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="()=>EditDish(dish.Id)">Edit</button>
+                    <button class="btn btn-danger" @onclick="()=>DeleteDish(dish.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-success" @onclick="() => AddDish()">Add</button>
+
+
+@code {
+
+    private List<Dish> dishes;
+    private string sortByColumn;
+    private bool sortAscending = true;
+    private string filterByName = "";
+
+    protected override void OnInitialized()
+    {
+        dishes = DishService.GetAll().ToList();
+    }
+
+    private void EditDish(int dishId)
+    {
+        var dish = DishService.GetById(dishId);
+
+        if (dish != null)
+        {
+            NavigationManager.NavigateTo($"/dishcreateedit/{dishId}");
+        }
+    }
+
+    private void DeleteDish(int dishId)
+    {
+
+        DishService.Delete(dishId);
+        refreshData();
+
+    }
+
+    private void AddDish()
+    {
+        NavigationManager.NavigateTo("/dishcreateedit/new");
+    }
+
+    private void SortBy(string columnName)
+    {
+        if (columnName.Equals(sortByColumn))
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortAscending = true;
+            sortByColumn = columnName;
+        }
+
+        switch (columnName)
+        {
+            case nameof(Dish.Id):
+                dishes = sortAscending ? dishes.OrderBy(d => d.Id).ToList() : dishes.OrderByDescending(d => d.Id).ToList();
+                break;
+            case nameof(Dish.Name):
+                dishes = sortAscending ? dishes.OrderBy(d => d.Name).ToList() : dishes.OrderByDescending(d => d.Name).ToList();
+                break;
+            case nameof(Dish.Description):
+                dishes = sortAscending ? dishes.OrderBy(d => d.Description).ToList() : dishes.OrderByDescending(d => d.Description).ToList();
+                break;
+            case nameof(Dish.Price):
+                dishes = sortAscending ? dishes.OrderBy(d => d.Price).ToList() : dishes.OrderByDescending(d => d.Price).ToList();
+                break;
+            case nameof(Dish.Category):
+                dishes = sortAscending ? dishes.OrderBy(d => d.Category).ToList() : dishes.OrderByDescending(d => d.Category).ToList();
+                break;
+            case nameof(Dish.IsVegetarian):
+                dishes = sortAscending ? dishes.OrderBy(d => d.IsVegetarian).ToList() : dishes.OrderByDescending(d => d.IsVegetarian).ToList();
+                break;
+        }
+    }
+
+    private void ApplyFilter()
+    {
+        dishes = dishes.Where(d => d.Name.Contains(filterByName, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private void ClearFilters()
+    {
+        filterByName = "";
+        refreshData();
+    }
+
+    private void refreshData(string sort = "")
+    {
+        dishes = DishService.GetAll().ToList();
+        if (!string.IsNullOrEmpty(sort))
+        {
+            SortBy(sort);
+        }
+        ApplyFilter();
+    }
+}

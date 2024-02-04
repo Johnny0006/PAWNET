@@ -1,0 +1,72 @@
+﻿@page "/dishcreateedit/{dishId}"
+@using PAWNET.Service
+@using PAWNET.Model
+@inject DishService DishService
+@inject NavigationManager NavigationManager
+
+
+<h3>Edit Dish</h3>
+
+@if (Dish != null)
+{
+    <form>
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input class="form-control" id="name" @bind="Dish.Name" />
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <input class="form-control" id="description" @bind="Dish.Description" />
+        </div>
+        <div class="form-group">
+            <label for="price">Price:</label>
+            <input class="form-control" id="price" @bind="Dish.Price" />
+        </div>
+        <div class="form-group">
+            <label for="category">Category:</label>
+            <input class="form-control" id="category" @bind="Dish.Category" />
+        </div>
+        <div class="form-group">
+            <label for="isVegetarian">Is Vegetarian:</label>
+            <input type="checkbox" id="isVegetarian" @bind="Dish.IsVegetarian" />
+        </div>
+        <button type="button" class="btn btn-primary" @onclick="Save">Save</button>
+    </form>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    private Dish Dish;
+
+    [Parameter]
+    public string DishId { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(DishId) && !DishId.Equals("new") && int.TryParse(DishId, out int id))
+        {
+            Dish = DishService.GetById(id);
+        }
+        else
+        {
+            Dish = new Dish();
+        }
+    }
+
+    private void Save()
+    {
+        if (Dish.Id == 0)
+        {
+            DishService.Add(Dish);
+        }
+        else
+        {
+            DishService.Update(Dish);
+        }
+
+        NavigationManager.NavigateTo("/");
+    }
+}
